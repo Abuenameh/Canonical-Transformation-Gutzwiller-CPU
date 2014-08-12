@@ -1,8 +1,14 @@
 #ifdef __NVCC__
 
+#include <stdio.h>
+
 #include "cudautils.hpp"
 #include "gutzwiller.hpp"
-//#include "cudacomplex.hpp"
+
+void printCudaError() {
+cudaError_t code = cudaGetLastError();
+printf("CUDA Error: %s\n", cudaGetErrorString(code));
+}
 
 __device__ double atomicAdd(double* address, double val) {
 	unsigned long long int* address_as_ull = (unsigned long long int*) address;
@@ -185,15 +191,20 @@ extern double Efunc(unsigned ndim, const double *x, double *grad, void *data) {
 	parameters* parms = static_cast<parameters*>(data);
 
 	memAlloc<double>(&x_device, ndim);
+if(grad) {
 	memAlloc<double>(&grad_device, ndim);
+}
+else {
+grad_device = NULL;
+}
 	memAlloc<device_parameters>(&parms_device, 1);
 	memAlloc<double>(&U_device, L);
 	memAlloc<double>(&J_device, L);
 	memAlloc<double>(&f_device, 1);
 
 	memCopy(x_device, x, ndim * sizeof(double), cudaMemcpyHostToDevice);
-	memCopy(U_device, &parms->U[0], L * sizeof(double), cudaMemcpyHostToDevice);
-	memCopy(J_device, &parms->J[0], L * sizeof(double), cudaMemcpyHostToDevice);
+	memCopy(U_device, parms->U.data(), L * sizeof(double), cudaMemcpyHostToDevice);
+	memCopy(J_device, parms->J.data(), L * sizeof(double), cudaMemcpyHostToDevice);
 	dparms.U = U_device;
 	dparms.J = J_device;
 	dparms.mu = parms->mu;
@@ -207,18 +218,22 @@ extern double Efunc(unsigned ndim, const double *x, double *grad, void *data) {
 	Efuncker<<<1, L>>>(ndim, x_device, f_device, grad_device,
 		parms_device);
 
+if(grad) {
 	memCopy(grad, grad_device, ndim * sizeof(double));
+}
 
 	memCopy(&E, f_device, sizeof(double), cudaMemcpyDeviceToHost);
 
 	memFree(x_device);
+if(grad) {
 	memFree(grad_device);
+}
 	memFree(parms_device);
 	memFree(U_device);
 	memFree(J_device);
 	memFree(f_device);
 
-	cout << E << endl;
+	//cout << E << endl;
 
 	return E;
 }
@@ -268,17 +283,26 @@ extern void norm2s(unsigned m, double *result, unsigned ndim, const double* x,
 
 	memAlloc<double>(&result_device, L);
 	memAlloc<double>(&x_device, ndim);
+if(grad) {
 	memAlloc<double>(&grad_device, ndim);
+}
+else {
+grad_device = NULL;
+}
 
 	memCopy(x_device, x, ndim * sizeof(double), cudaMemcpyHostToDevice);
 
 	norm2sker<<<1, L>>>(m, result_device, ndim, x_device, grad_device, NULL);
 
 	memCopy(result, result_device, L * sizeof(double));
+if(grad) {
 	memCopy(grad, grad_device, ndim * sizeof(double));
+}
 
 	memFree(x_device);
+if(grad) {
 	memFree(grad_device);
+}
 
 //	const doublecomplex * f[L];
 //	for (int i = 0; i < L; i++) {
@@ -456,7 +480,7 @@ __global__ void Ethfuncker(unsigned ndim, const double *x, double* fval,
 	}
 
 
-//	printf("E: %f\n", Ec.real());
+	//printf("Eth: %f\n", Ec.real());
 	atomicAdd(fval, Ec.real());
 //	fval[0] = Ec.real();
 
@@ -476,15 +500,20 @@ extern double Ethfunc(unsigned ndim, const double *x, double *grad, void *data) 
 	parameters* parms = static_cast<parameters*>(data);
 
 	memAlloc<double>(&x_device, ndim);
+if(grad) {
 	memAlloc<double>(&grad_device, ndim);
+}
+else {
+grad_device = NULL;
+}
 	memAlloc<device_parameters>(&parms_device, 1);
 	memAlloc<double>(&U_device, L);
 	memAlloc<double>(&J_device, L);
 	memAlloc<double>(&f_device, 1);
 
 	memCopy(x_device, x, ndim * sizeof(double), cudaMemcpyHostToDevice);
-	memCopy(U_device, &parms->U[0], L * sizeof(double), cudaMemcpyHostToDevice);
-	memCopy(J_device, &parms->J[0], L * sizeof(double), cudaMemcpyHostToDevice);
+	memCopy(U_device, parms->U.data(), L * sizeof(double), cudaMemcpyHostToDevice);
+	memCopy(J_device, parms->J.data(), L * sizeof(double), cudaMemcpyHostToDevice);
 	dparms.U = U_device;
 	dparms.J = J_device;
 	dparms.mu = parms->mu;
@@ -498,18 +527,23 @@ extern double Ethfunc(unsigned ndim, const double *x, double *grad, void *data) 
 	Ethfuncker<<<1, L>>>(ndim, x_device, f_device, grad_device,
 		parms_device);
 
+if(grad) {
 	memCopy(grad, grad_device, ndim * sizeof(double));
+}
 
 	memCopy(&E, f_device, sizeof(double), cudaMemcpyDeviceToHost);
+//cout << "Eth: " << E << endl;
 
 	memFree(x_device);
+if(grad) {
 	memFree(grad_device);
+}
 	memFree(parms_device);
 	memFree(U_device);
 	memFree(J_device);
 	memFree(f_device);
 
-	//cout << E << endl;
+	//cout << "Eth = " << E << endl;
 
 	return E;
 }
