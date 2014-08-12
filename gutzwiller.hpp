@@ -20,7 +20,7 @@ using namespace std;
 typedef complex<double> doublecomplex;
 #endif
 
-#define L 3
+#define L 10
 #define nmax 5
 #define dim (nmax+1)
 

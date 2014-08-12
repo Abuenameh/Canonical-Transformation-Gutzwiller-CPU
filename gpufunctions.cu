@@ -24,6 +24,15 @@ __device__ double atomicAdd(double* address, double val) {
 __global__ void Efuncker(unsigned ndim, const double *x, double* fval,
 	double *grad, void *data) {
 
+	/*const int i = blockIdx.x;
+	if (i >= L) {
+		return;
+	}
+const int n = threadIdx.x;
+	if (n > nmax) {
+		return;
+	}*/
+
 	const int i = threadIdx.x;
 	if (i >= L) {
 		return;
@@ -215,7 +224,7 @@ grad_device = NULL;
 	double E = 0;
 
 	memCopy(f_device, &E, sizeof(double), cudaMemcpyHostToDevice);
-	Efuncker<<<1, L>>>(ndim, x_device, f_device, grad_device,
+	Efuncker<<<1,L>>>(ndim, x_device, f_device, grad_device,
 		parms_device);
 
 if(grad) {
@@ -328,6 +337,15 @@ if(grad) {
 
 __global__ void Ethfuncker(unsigned ndim, const double *x, double* fval,
 	double *grad, void *data) {
+
+	/*const int i = blockIdx.x;
+	if (i >= L) {
+		return;
+	}
+const int n = threadIdx.x;
+	if (n > nmax) {
+		return;
+	}*/
 
 	const int i = threadIdx.x;
 	if (i >= L) {
@@ -524,7 +542,7 @@ grad_device = NULL;
 	double E = 0;
 
 	memCopy(f_device, &E, sizeof(double), cudaMemcpyHostToDevice);
-	Ethfuncker<<<1, L>>>(ndim, x_device, f_device, grad_device,
+	Ethfuncker<<<1,L>>>(ndim, x_device, f_device, grad_device,
 		parms_device);
 
 if(grad) {
