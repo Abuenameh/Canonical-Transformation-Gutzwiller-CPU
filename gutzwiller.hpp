@@ -14,7 +14,9 @@
 
 using namespace std;
 
-#ifndef __NVCC__
+#ifdef __NVCC__
+#include "cudacomplex.hpp"
+#else
 typedef complex<double> doublecomplex;
 #endif
 
