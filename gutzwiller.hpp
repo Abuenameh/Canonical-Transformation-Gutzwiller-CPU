@@ -14,7 +14,9 @@
 
 using namespace std;
 
+#ifndef __NVCC__
 typedef complex<double> doublecomplex;
+#endif
 
 #define L 3
 #define nmax 5
@@ -35,15 +37,26 @@ struct parameters {
 //	double* J;
 };
 
-inline int mod(int i) {
+struct device_parameters {
+	double* U;
+	double mu;
+	double* J;
+    double theta;
+};
+
+__host__ __device__ inline int mod(int i) {
 	return (i + L) % L;
 }
 
-inline double g(int n, int m) {
-	return sqrt((n + 1) * m);
+__host__ __device__ inline double g(int n, int m) {
+	return sqrt(1.0*(n + 1) * m);
 }
 
-inline double eps(vector<double> U, int i, int j, int n, int m) {
+__host__ inline double eps(vector<double> U, int i, int j, int n, int m) {
+	return n * U[i] - (m - 1) * U[j];
+}
+
+__device__ inline double eps(double* U, int i, int j, int n, int m) {
 	return n * U[i] - (m - 1) * U[j];
 }
 
