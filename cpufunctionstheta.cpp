@@ -1,6 +1,6 @@
-#include "gutzwiller.hpp"
-
 #ifndef __NVCC__
+
+#include "gutzwiller.hpp"
 
 doublecomplex I(0, 1);
 

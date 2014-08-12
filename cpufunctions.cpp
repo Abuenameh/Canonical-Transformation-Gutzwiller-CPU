@@ -1,6 +1,6 @@
-#include "gutzwiller.hpp"
-
 #ifndef __NVCC__
+
+#include "gutzwiller.hpp"
 
 double Efunc(unsigned ndim, const double *x, double *grad, void *data) {
 	parameters* parms = static_cast<parameters*>(data);
