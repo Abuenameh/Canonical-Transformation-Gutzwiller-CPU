@@ -57,11 +57,17 @@ struct Point {
     double mu;
 };
 
-double Efunc(unsigned ndim, const double *x, double *grad, void *data);
-void norm2s(unsigned m, double *result, unsigned ndim, const double* x,
+#ifdef __NVCC__
+#define FUNCTION extern
+#else
+#define FUNCTION
+#endif
+
+FUNCTION double Efunc(unsigned ndim, const double *x, double *grad, void *data);
+FUNCTION void norm2s(unsigned m, double *result, unsigned ndim, const double* x,
         double* grad, void* data);
 
-double Efuncth(unsigned ndim, const double *x, double *grad, void *data);
+FUNCTION double Ethfunc(unsigned ndim, const double *x, double *grad, void *data);
 
 double norm2(const vector<double> x, vector<double>& norm2is) {
     const doublecomplex * f[L];
@@ -168,7 +174,7 @@ void phasepoints(Parameter& xi, double theta, queue<Point>& points, multi_array<
         f0[point.i][point.j] = x;
         E0res[point.i][point.j] = E0;
         
-        opt.set_min_objective(Efuncth, &parms);
+        opt.set_min_objective(Ethfunc, &parms);
         
         double Eth = 0;
         try {

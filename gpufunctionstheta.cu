@@ -14,7 +14,7 @@ __device__ double atomicAdd(double* address, double val) {
 	return __longlong_as_double(old);
 }
 
-__global__ void Efuncker(unsigned ndim, const double *x, double* fval,
+__global__ void Ethfuncker(unsigned ndim, const double *x, double* fval,
 	double *grad, void *data) {
 
 	const int i = threadIdx.x;
@@ -176,7 +176,7 @@ __global__ void Efuncker(unsigned ndim, const double *x, double* fval,
 //	return Ec.real();
 }
 
-double Efunc(unsigned ndim, const double *x, double *grad, void *data) {
+extern double Ethfunc(unsigned ndim, const double *x, double *grad, void *data) {
 	double* x_device;
 	double* grad_device;
 	device_parameters* parms_device;
@@ -207,7 +207,7 @@ double Efunc(unsigned ndim, const double *x, double *grad, void *data) {
 	double E = 0;
 
 	memCopy(f_device, &E, sizeof(double), cudaMemcpyHostToDevice);
-	Efuncker<<<1, L>>>(ndim, x_device, f_device, grad_device,
+	Ethfuncker<<<1, L>>>(ndim, x_device, f_device, grad_device,
 		parms_device);
 
 	memCopy(grad, grad_device, ndim * sizeof(double));

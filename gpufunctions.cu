@@ -172,7 +172,7 @@ __global__ void Efuncker(unsigned ndim, const double *x, double* fval,
 //	return Ec.real();
 }
 
-double Efunc(unsigned ndim, const double *x, double *grad, void *data) {
+extern double Efunc(unsigned ndim, const double *x, double *grad, void *data) {
 	double* x_device;
 	double* grad_device;
 	device_parameters* parms_device;
@@ -258,7 +258,7 @@ __global__ void norm2sker(unsigned m, double *result, unsigned ndim,
 	}
 }
 
-void norm2s(unsigned m, double *result, unsigned ndim, const double* x,
+extern void norm2s(unsigned m, double *result, unsigned ndim, const double* x,
 	double* grad, void* data) {
 
 	double* result_device;
