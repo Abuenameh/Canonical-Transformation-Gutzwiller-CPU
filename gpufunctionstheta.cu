@@ -1,7 +1,8 @@
-#include "gutzwiller.hpp"
-#include "cudautils.hpp"
-
 #ifdef __NVCC__
+
+#include "cudautils.hpp"
+#include "gutzwiller.hpp"
+//#include "cudacomplex.hpp"
 
 __device__ double atomicAdd(double* address, double val) {
 	unsigned long long int* address_as_ull = (unsigned long long int*) address;

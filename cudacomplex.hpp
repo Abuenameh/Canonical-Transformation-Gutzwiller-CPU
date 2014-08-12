@@ -325,4 +325,24 @@ HOSTDEVICE T norm(_cudacomplex<T2, T> c)
     return c.value.x * c.value.x + c.value.y * c.value.y;
 }
 
+
+/*// subtract double complex from scalar
+HOSTDEVICE _cudacomplex<double2, double> operator-(const double REF(a), const _cudacomplex<double2, double> REF(b));
+
+// add double complex to scalar
+HOSTDEVICE _cudacomplex<double2, double> operator+(const double REF(a), const _cudacomplex<double2, double> REF(b));
+
+// multiply scalar with double complex
+HOSTDEVICE _cudacomplex<double2, double> operator*(const double REF(a), const _cudacomplex<double2, double> REF(b));
+// divide scalar by double complex
+HOSTDEVICE _cudacomplex<double2, double> operator/(const double REF(a), const _cudacomplex<double2, double> REF(b));
+
+// a possible alternative to a single complex constructor
+HOSTDEVICE singlecomplex make_singlecomplex(float a, float b);
+
+// a possible alternative to a double complex constructor
+HOSTDEVICE doublecomplex make_doublecomplex(double a, double b);
+
+template<class T2, class T>
+HOSTDEVICE T norm(_cudacomplex<T2, T> c);*/
 #endif // #ifndef CUDACOMPLEX_H

@@ -8,6 +8,8 @@
 #ifndef CUDAUTIL_HPP_
 #define CUDAUTIL_HPP_
 
+#include <cuda.h>
+#include <cuda_runtime.h>
 
 inline int iAlignUp(int a, int b)
 {
