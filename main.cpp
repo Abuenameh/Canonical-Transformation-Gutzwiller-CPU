@@ -12,7 +12,7 @@
 #include <complex>
 #include <iostream>
 #include <queue>
-#include <thread>
+//#include <thread>
 #include <nlopt.hpp>
 
 #include <boost/array.hpp>
@@ -22,8 +22,9 @@
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
 #include <boost/progress.hpp>
-//#include <boost/thread/mutex.hpp>
-//#include <boost/thread/locks.hpp>
+#include <boost/thread.hpp>
+#include <boost/thread/mutex.hpp>
+#include <boost/thread/locks.hpp>
 
 #include "mathematica.h"
 #include "gutzwiller.hpp"
@@ -46,8 +47,8 @@ typedef boost::array<double, L> Parameter;
 //    out << name << "[" << i << "]" << "=" << ::math(t) << ";" << endl;
 //}
 
-mutex progress_mutex;
-mutex points_mutex;
+boost::mutex progress_mutex;
+boost::mutex points_mutex;
 
 struct Point {
     int i;
@@ -104,7 +105,7 @@ void phasepoints(Parameter& xi, double theta, queue<Point>& points, multi_array<
         for (;;) {
         Point point;
         {
-            lock_guard<mutex> lock(points_mutex);
+            boost::mutex::scoped_lock lock(points_mutex);
             if (points.empty()) {
                 break;
             }
@@ -186,7 +187,7 @@ void phasepoints(Parameter& xi, double theta, queue<Point>& points, multi_array<
         cout << "Eth - E0 = " << Eth-E0 << endl << endl;
 
             {
-                lock_guard<mutex> lock(progress_mutex);
+                boost::mutex::scoped_lock lock(progress_mutex);
                 ++progress;
             }
     }
@@ -240,7 +241,8 @@ int main(int argc, char** argv) {
     int resi = lexical_cast<int>(argv[12]);
 
 #ifdef AMAZON
-    path resdir("/home/ubuntu/Dropbox/Amazon EC2/Simulation Results/Gutzwiller Phase Diagram");
+//    path resdir("/home/ubuntu/Dropbox/Amazon EC2/Simulation Results/Gutzwiller Phase Diagram");
+    path resdir("/home/ubuntu/Dropbox/Amazon EC2/Simulation Results/Canonical Transformation Gutzwiller");
 #else
     //    path resdir("/Users/Abuenameh/Dropbox/Amazon EC2/Simulation Results/Gutzwiller Phase Diagram");
     path resdir("/Users/Abuenameh/Documents/Simulation Results/Canonical Transformation Gutzwiller");
@@ -316,16 +318,16 @@ int main(int argc, char** argv) {
             }
         }
 
-        //        thread_group threads;
-        vector<thread> threads;
+                thread_group threads;
+//        vector<thread> threads;
         for (int i = 0; i < numthreads; i++) {
-                        threads.emplace_back(phasepoints, std::ref(xi), theta, std::ref(points), std::ref(f0res), std::ref(E0res), std::ref(Ethres), std::ref(fsres), std::ref(progress));
-            //            threads.create_thread(bind(&phasepoints, boost::ref(xi), eps, boost::ref(points), boost::ref(fcres), boost::ref(fsres), boost::ref(ares), boost::ref(progress)));
+//                        threads.emplace_back(phasepoints, std::ref(xi), theta, std::ref(points), std::ref(f0res), std::ref(E0res), std::ref(Ethres), std::ref(fsres), std::ref(progress));
+                        threads.create_thread(bind(&phasepoints, boost::ref(xi), theta, boost::ref(points), boost::ref(f0res), boost::ref(E0res), boost::ref(Ethres), boost::ref(fsres), boost::ref(progress)));
         }
-        for (thread& t : threads) {
-            t.join();
-        }
-        //        threads.join_all();
+//        for (thread& t : threads) {
+//            t.join();
+//        }
+                threads.join_all();
 
 
 //        printMath(os, "fcres", resi, fcres);
