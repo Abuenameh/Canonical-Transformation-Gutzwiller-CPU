@@ -4,7 +4,7 @@
 
 doublecomplex I(0, 1);
 
-double Efuncth(unsigned ndim, const double *x, double *grad, void *data) {
+double Ethfunc(unsigned ndim, const double *x, double *grad, void *data) {
 	parameters* parms = static_cast<parameters*>(data);
 	vector<double> U = parms->U;
 	double mu = parms->mu;
