@@ -24,8 +24,8 @@ typedef complex<double> doublecomplex;
 #define G_HOSTDEVICE
 #endif
 
-#define L 3
-#define nmax 3
+#define L 50
+#define nmax 7
 #define dim (nmax+1)
 
 template<class T>
@@ -34,6 +34,7 @@ complex<T> operator~(const complex<T> a) {
 }
 
 struct parameters {
+    bool canonical;
 	vector<double> U;
 	double mu;
 	vector<double> J;
@@ -41,6 +42,11 @@ struct parameters {
 //	double* U;
 //	double mu;
 //	double* J;
+};
+
+struct phase_parameters {
+    double theta;
+    bool canonical;
 };
 
 struct device_parameters {
@@ -61,6 +67,9 @@ G_HOSTDEVICE inline double g(int n, int m) {
 G_HOST inline double eps(vector<double> U, int i, int j, int n, int m) {
 	return n * U[i] - (m - 1) * U[j];
 }
+
+double Encfunc(unsigned ndim, const double *x, double *grad, void *data);
+double Ecfunc(unsigned ndim, const double *x, double *grad, void *data);
 
 #ifdef __NVCC__
 __device__ inline double eps(double* U, int i, int j, int n, int m) {
