@@ -67,8 +67,6 @@ FUNCTION double Efunc(unsigned ndim, const double *x, double *grad, void *data);
 FUNCTION void norm2s(unsigned m, double *result, unsigned ndim, const double* x,
         double* grad, void* data);
 
-FUNCTION double Ethfunc(unsigned ndim, const double *x, double *grad, void *data);
-
 double norm2(const vector<double> x, vector<double>& norm2is) {
     const doublecomplex * f[L];
     for (int i = 0; i < L; i++) {
@@ -144,7 +142,7 @@ void phasepoints(Parameter& xi, double theta, queue<Point>& points, multi_array<
     	parms.J = J;
     	parms.U = U;
     	parms.mu = point.mu;
-    //    parms.theta = 0.1;
+        parms.theta = 0;
     //
     ////    Efuncth(ndim, &x[0], NULL, &parms);
     ////    return 0;
@@ -153,7 +151,7 @@ void phasepoints(Parameter& xi, double theta, queue<Point>& points, multi_array<
         opt.set_lower_bounds(-1);
         opt.set_upper_bounds(1);
         vector<double> ctol(L, 1e-8);
-        opt.add_equality_mconstraint(norm2s, NULL, ctol);
+//        opt.add_equality_mconstraint(norm2s, NULL, ctol);
         opt.set_xtol_rel(1e-8);
 
             opt.set_min_objective(Efunc, &parms);
@@ -174,9 +172,10 @@ void phasepoints(Parameter& xi, double theta, queue<Point>& points, multi_array<
         f0[point.i][point.j] = x;
         E0res[point.i][point.j] = E0;
         
-        opt.set_min_objective(Ethfunc, &parms);
+//        opt.set_min_objective(Ethfunc, &parms);
         
         double Eth = 0;
+        parms.theta = 0.01;
         try {
             res = opt.optimize(x, Eth);
             printf("Twisted energy: %0.10g\n", Eth);
@@ -189,8 +188,22 @@ void phasepoints(Parameter& xi, double theta, queue<Point>& points, multi_array<
 
         Ethres[point.i][point.j] = Eth;
 
+        double Eth2 = 0;
+        parms.theta = 0.02;
+        try {
+            res = opt.optimize(x, Eth2);
+            printf("Twisted energy 2: %0.10g\n", Eth2);
+        }
+        catch(std::exception& e) {
+            printf("nlopt failed! %d\n", res);
+            cout << e.what() << endl;
+            Eth2 = numeric_limits<double>::quiet_NaN();
+        }
+        
+        cout << "fs = " << (Eth2-2*Eth+E0)/(0.01*0.01) << endl;
+
         //    
-        cout << "Eth - E0 = " << Eth-E0 << endl << endl;
+//        cout << "Eth - E0 = " << Eth-E0 << endl << endl;
 
             {
                 boost::mutex::scoped_lock lock(progress_mutex);
@@ -204,6 +217,22 @@ void phasepoints(Parameter& xi, double theta, queue<Point>& points, multi_array<
  *
  */
 int main(int argc, char** argv) {
+    
+//    vector<double> f(2*L*dim,1/sqrt(2.*dim));
+//    vector<double> g(2*L*dim,0);
+//    	parameters parms;
+//    	parms.J = vector<double>(L,0.1);
+//    	parms.U = vector<double>(L,1);
+//    	parms.mu = 0.5;
+//        parms.theta = 0.01;
+//    double E1 = Efunc(2*L*dim,f.data(),g.data(),&parms);
+//    int id = 4;
+//    f[id] += 1e-6;
+//    double E2 = Efunc(2*L*dim,f.data(),g.data(),&parms);
+//    cout << g[id] << endl;
+//    cout << (E2-E1) << endl;
+//    
+//    return 0;
 
     mt19937 rng;
     uniform_real_distribution<> uni(-1, 1);
