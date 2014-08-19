@@ -78,25 +78,25 @@ double Efunc(unsigned ndim, const double *x, double *grad, void *data) {
 FUNCTION void norm2s(unsigned m, double *result, unsigned ndim, const double* x,
         double* grad, void* data);
 
-double norm2(const vector<double> x, vector<double>& norm2is) {
+double norm(const vector<double> x, vector<double>& norms) {
     const doublecomplex * f[L];
     for (int i = 0; i < L; i++) {
         f[i] = reinterpret_cast<const doublecomplex*> (&x[2 * i * dim]);
     }
 
-    norm2is.resize(L);
+    norms.resize(L);
 
-    double norm2 = 1;
+//    double norm = 1;
     for (int i = 0; i < L; i++) {
-        double norm2i = 0;
+        double normi = 0;
         for (int n = 0; n <= nmax; n++) {
-            norm2i += norm(f[i][n]);
+            normi += norm(f[i][n]);
         }
-        norm2 *= norm2i;
-        norm2is[i] = norm2;
+//        norm *= normi;
+        norms[i] = sqrt(normi);
     }
-    return norm2;
-
+//    return norm;
+    return 0;
 }
 
 int min(int a, int b) {
@@ -109,10 +109,21 @@ int max(int a, int b) {
 
 void phasepoints(Parameter& xi, phase_parameters pparms, queue<Point>& points, multi_array<vector<double>, 2 >& f0, multi_array<double, 2 >& E0res, multi_array<double, 2 >& Ethres, multi_array<double, 2 >& Eth2res, multi_array<double, 2 >& fs, progress_display& progress) {
 
+    mt19937 rng;
+    uniform_real_distribution<> uni(-1, 1);
+
     int ndim = 2 * L * dim;
 
     vector<double> x(ndim);
     vector<double> U(L), J(L);
+    
+        vector<double> x0(ndim);
+        vector<double> norms(L);
+
+    for(int i = 0; i < L; i++) {
+            U[i] = 1+0.2*uni(rng);
+            U[i] = 1;
+    }
 
     parameters parms;
     parms.canonical = pparms.canonical;
@@ -138,7 +149,7 @@ void phasepoints(Parameter& xi, phase_parameters pparms, queue<Point>& points, m
             ////		U[i] = 0.1 * sqrt(i + 1);
             ////		J[i] = 0.1 * min(i + 1, mod(i + 1) + 1)
             ////			+ 0.2 * max(i + 1, mod(i + 1) + 1);
-            U[i] = 1;
+//            U[i] = 1+0.2*uni(rng);
             J[i] = point.x;
         }
 
@@ -164,10 +175,10 @@ void phasepoints(Parameter& xi, phase_parameters pparms, queue<Point>& points, m
         ////    return 0;
         //
         //        cout << "Setting up optimizer" << endl;
-        nlopt::opt opt(nlopt::LD_LBFGS, ndim);
-        opt.set_lower_bounds(-1);
-        opt.set_upper_bounds(1);
-        vector<double> ctol(L, 1e-8);
+        nlopt::opt opt(nlopt::LD_TNEWTON, ndim);
+//        opt.set_lower_bounds(-1);
+//        opt.set_upper_bounds(1);
+//        vector<double> ctol(L, 1e-8);
         //        opt.add_equality_mconstraint(norm2s, NULL, ctol);
         opt.set_xtol_rel(1e-8);
 
@@ -181,12 +192,20 @@ void phasepoints(Parameter& xi, phase_parameters pparms, queue<Point>& points, m
             res = opt.optimize(x, E0);
             //            printf("Ground state energy: %0.10g\n", E0);
         }        catch (std::exception& e) {
-            printf("nlopt failed! %d\n", res);
+            printf("nlopt failed!: E0: %d, %d\n", point.i, point.j);
             cout << e.what() << endl;
             E0 = numeric_limits<double>::quiet_NaN();
         }
-
-        f0[point.i][point.j] = x;
+        
+        norm(x, norms);
+        for(int i = 0; i < L; i++) {
+            for(int n = 0; n <= nmax; n++) {
+                x0[2*(i*dim+n)] = x[2*(i*dim+n)]/norms[i];
+                x0[2*(i*dim+n)+1] = x[2*(i*dim+n)+1]/norms[i];
+            }
+        }
+        
+        f0[point.i][point.j] = x0;
         E0res[point.i][point.j] = E0;
 
         //        opt.set_min_objective(Ethfunc, &parms);
@@ -197,7 +216,7 @@ void phasepoints(Parameter& xi, phase_parameters pparms, queue<Point>& points, m
             res = opt.optimize(x, Eth);
             //            printf("Twisted energy: %0.10g\n", Eth);
         }        catch (std::exception& e) {
-            printf("nlopt failed! %d\n", res);
+            printf("nlopt failed!: Eth: %d, %d\n", point.i, point.j);
             cout << e.what() << endl;
             Eth = numeric_limits<double>::quiet_NaN();
         }
@@ -210,14 +229,14 @@ void phasepoints(Parameter& xi, phase_parameters pparms, queue<Point>& points, m
             res = opt.optimize(x, Eth2);
             //            printf("Twisted energy 2: %0.10g\n", Eth2);
         }        catch (std::exception& e) {
-            printf("nlopt failed! %d\n", res);
+            printf("nlopt failed!: Eth2: %d, %d\n", point.i, point.j);
             cout << e.what() << endl;
             Eth2 = numeric_limits<double>::quiet_NaN();
         }
 
         Eth2res[point.i][point.j] = Eth2;
 
-        fs[point.i][point.j] = (Eth2 - 2 * Eth + E0) / (theta * theta);
+        fs[point.i][point.j] = (Eth2 - 2 * Eth + E0) / (L * theta * theta);
         //        cout << "fs = " << (Eth2-2*Eth+E0)/(0.01*0.01) << endl;
 
         //    
@@ -339,6 +358,7 @@ int main(int argc, char** argv) {
         int Lres = L;
 
         boost::filesystem::ofstream os(resfile);
+        printMath(os, "canonical", resi, canonical);
         printMath(os, "Lres", resi, Lres);
         printMath(os, "seed", resi, seed);
         printMath(os, "theta", resi, theta);
