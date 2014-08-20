@@ -103,8 +103,7 @@ double Efunc(unsigned ndim, const double *x, double *grad, void *data) {
     parameters* parms = static_cast<parameters*> (data);
     if (parms->canonical) {
         return Ecfunc(ndim, x, grad, data);
-    }
-    else {
+    } else {
         return Encfunc(ndim, x, grad, data);
     }
 }
@@ -120,16 +119,16 @@ double norm(const vector<double> x, vector<double>& norms) {
 
     norms.resize(L);
 
-//    double norm = 1;
+    //    double norm = 1;
     for (int i = 0; i < L; i++) {
         double normi = 0;
         for (int n = 0; n <= nmax; n++) {
             normi += norm(f[i][n]);
         }
-//        norm *= normi;
+        //        norm *= normi;
         norms[i] = sqrt(normi);
     }
-//    return norm;
+    //    return norm;
     return 0;
 }
 
@@ -142,6 +141,9 @@ int max(int a, int b) {
 }
 
 struct fresults {
+    multi_array<double, 2>& fmin;
+    multi_array<vector<double>, 2>& fn0;
+    multi_array<vector<double>, 2>& fmax;
     multi_array<vector<double>, 2>& f0;
     multi_array<vector<double>, 2>& fth;
     multi_array<vector<double>, 2>& fth2;
@@ -156,20 +158,39 @@ void phasepoints(Parameter& xi, phase_parameters pparms, queue<Point>& points, /
     int ndim = 2 * L * dim;
 
     vector<double> x(ndim);
-    vector<double> U(L), J(L);
-    
-        vector<double> x0(ndim);
-        vector<double> norms(L);
+        doublecomplex * f[L];
+        for (int i = 0; i < L; i++) {
+            f[i] = reinterpret_cast<doublecomplex*> (&x[2 * i * dim]);
+        }
 
-    for(int i = 0; i < L; i++) {
-            U[i] = 1+0.2*uni(rng);
-//            U[i] = 1;
+    vector<double> U(L), J(L);
+
+    vector<double> x0(ndim);
+        doublecomplex * f0[L];
+        for (int i = 0; i < L; i++) {
+            f0[i] = reinterpret_cast<doublecomplex*> (&x0[2 * i * dim]);
+        }
+
+        vector<double> xabs(ndim/2);
+        double* fabs[L];
+        for(int i = 0; i < L; i++) {
+            fabs[i] = &xabs[i*dim];
+        }
+        
+        vector<double> fn0(L);
+        vector<double> fmax(L);
+
+    vector<double> norms(L);
+
+    for (int i = 0; i < L; i++) {
+        U[i] = 1 + 0.2 * uni(rng);
+        U[i] = 1;
     }
 
     parameters parms;
     parms.canonical = pparms.canonical;
     //        parms.theta = theta;
-    
+
     double theta = pparms.theta;
 
     for (;;) {
@@ -190,19 +211,14 @@ void phasepoints(Parameter& xi, phase_parameters pparms, queue<Point>& points, /
             ////		U[i] = 0.1 * sqrt(i + 1);
             ////		J[i] = 0.1 * min(i + 1, mod(i + 1) + 1)
             ////			+ 0.2 * max(i + 1, mod(i + 1) + 1);
-//            U[i] = 1+0.2*uni(rng);
+            //            U[i] = 1+0.2*uni(rng);
             J[i] = point.x;
-        }
-
-        doublecomplex * f[L];
-        for (int i = 0; i < L; i++) {
-            f[i] = reinterpret_cast<doublecomplex*> (&x[2 * i * dim]);
         }
 
         for (int i = 0; i < L; i++) {
             for (int n = 0; n <= nmax; n++) {
                 f[i][n] = 1 / sqrt(dim);
-//                f[i][n] = doublecomplex(1/sqrt(dim),1/sqrt(dim));
+                //                f[i][n] = doublecomplex(1/sqrt(dim),1/sqrt(dim));
             }
         }
         //    
@@ -210,7 +226,7 @@ void phasepoints(Parameter& xi, phase_parameters pparms, queue<Point>& points, /
         parms.J = J;
         parms.U = U;
         parms.mu = point.mu;
-        
+
         parms.theta = 0;
         //
         ////    Efuncth(ndim, &x[0], NULL, &parms);
@@ -218,14 +234,14 @@ void phasepoints(Parameter& xi, phase_parameters pparms, queue<Point>& points, /
         //
         //        cout << "Setting up optimizer" << endl;
         nlopt::opt opt(nlopt::LD_LBFGS, ndim);
-//        opt.set_lower_bounds(-1);
-//        opt.set_upper_bounds(1);
-//        vector<double> ctol(L, 1e-8);
+        //        opt.set_lower_bounds(-1);
+        //        opt.set_upper_bounds(1);
+        //        vector<double> ctol(L, 1e-8);
         //        opt.add_equality_mconstraint(norm2s, NULL, ctol);
-//        opt.set_xtol_rel(/*1e-8*/0);
-//        opt.set_ftol_rel(0);
-//        opt.set_ftol_abs(0);
-//        opt.set_xtol_abs()
+        //        opt.set_xtol_rel(/*1e-8*/0);
+        //        opt.set_ftol_rel(0);
+        //        opt.set_ftol_abs(0);
+        //        opt.set_xtol_abs()
 
         opt.set_min_objective(Efunc, &parms);
         //            cout << "Optimizer set up. Doing optimization" << endl;
@@ -236,68 +252,86 @@ void phasepoints(Parameter& xi, phase_parameters pparms, queue<Point>& points, /
         try {
             res = opt.optimize(x, E0);
             //            printf("Ground state energy: %0.10g\n", E0);
-        }        catch (std::exception& e) {
+        } catch (std::exception& e) {
             printf("nlopt failed!: E0: %d, %d\n", point.i, point.j);
             cout << e.what() << endl;
             E0 = numeric_limits<double>::quiet_NaN();
         }
-        
+
         norm(x, norms);
-        for(int i = 0; i < L; i++) {
-            for(int n = 0; n <= nmax; n++) {
-                x0[2*(i*dim+n)] = x[2*(i*dim+n)]/norms[i];
-                x0[2*(i*dim+n)+1] = x[2*(i*dim+n)+1]/norms[i];
+        for (int i = 0; i < L; i++) {
+            for (int n = 0; n <= nmax; n++) {
+                x0[2 * (i * dim + n)] = x[2 * (i * dim + n)] / norms[i];
+                x0[2 * (i * dim + n) + 1] = x[2 * (i * dim + n) + 1] / norms[i];
             }
+            transform(f0[i], f0[i]+dim, fabs[i], std::ptr_fun<const doublecomplex&, double>(abs));
+            fmax[i] = *max_element(fabs[i], fabs[i]+dim);
+            fn0[i] = fabs[i][1];
         }
-        
+
+        fres.fmin[point.i][point.j] = *min_element(fn0.begin(), fn0.end());
+        fres.fn0[point.i][point.j] = fn0;
+        fres.fmax[point.i][point.j] = fmax;
         fres.f0[point.i][point.j] = x0;
         E0res[point.i][point.j] = E0;
 
         //        opt.set_min_objective(Ethfunc, &parms);
 
+        for (int i = 0; i < L; i++) {
+            for (int n = 0; n <= nmax; n++) {
+                f[i][n] = 1 / sqrt(dim);
+                //                f[i][n] = doublecomplex(1/sqrt(dim),1/sqrt(dim));
+            }
+        }
         double Eth = 0;
         parms.theta = theta;
         try {
             res = opt.optimize(x, Eth);
             //            printf("Twisted energy: %0.10g\n", Eth);
-        }        catch (std::exception& e) {
+        } catch (std::exception& e) {
             printf("nlopt failed!: Eth: %d, %d\n", point.i, point.j);
             cout << e.what() << endl;
             Eth = numeric_limits<double>::quiet_NaN();
         }
 
         norm(x, norms);
-        for(int i = 0; i < L; i++) {
-            for(int n = 0; n <= nmax; n++) {
-                x0[2*(i*dim+n)] = x[2*(i*dim+n)]/norms[i];
-                x0[2*(i*dim+n)+1] = x[2*(i*dim+n)+1]/norms[i];
+        for (int i = 0; i < L; i++) {
+            for (int n = 0; n <= nmax; n++) {
+                x0[2 * (i * dim + n)] = x[2 * (i * dim + n)] / norms[i];
+                x0[2 * (i * dim + n) + 1] = x[2 * (i * dim + n) + 1] / norms[i];
             }
         }
-        
-        fres.fth[point.i][point.j] = x0;
-        Ethres[point.i][point.j] = Eth;
 
+        fres.fth[point.i][point.j] = x0;
+//        Ethres[point.i][point.j] = Eth;
+
+        for (int i = 0; i < L; i++) {
+            for (int n = 0; n <= nmax; n++) {
+                f[i][n] = 1 / sqrt(dim);
+                //                f[i][n] = doublecomplex(1/sqrt(dim),1/sqrt(dim));
+            }
+        }
         double Eth2 = 0;
         parms.theta = 2 * theta;
         try {
             res = opt.optimize(x, Eth2);
             //            printf("Twisted energy 2: %0.10g\n", Eth2);
-        }        catch (std::exception& e) {
+        } catch (std::exception& e) {
             printf("nlopt failed!: Eth2: %d, %d\n", point.i, point.j);
             cout << e.what() << endl;
             Eth2 = numeric_limits<double>::quiet_NaN();
         }
 
         norm(x, norms);
-        for(int i = 0; i < L; i++) {
-            for(int n = 0; n <= nmax; n++) {
-                x0[2*(i*dim+n)] = x[2*(i*dim+n)]/norms[i];
-                x0[2*(i*dim+n)+1] = x[2*(i*dim+n)+1]/norms[i];
+        for (int i = 0; i < L; i++) {
+            for (int n = 0; n <= nmax; n++) {
+                x0[2 * (i * dim + n)] = x[2 * (i * dim + n)] / norms[i];
+                x0[2 * (i * dim + n) + 1] = x[2 * (i * dim + n) + 1] / norms[i];
             }
         }
-        
-        fres.fth2[point.i][point.j] = x0;
-        Eth2res[point.i][point.j] = Eth2;
+
+//        fres.fth2[point.i][point.j] = x0;
+//        Eth2res[point.i][point.j] = Eth2;
 
         fs[point.i][point.j] = (Eth2 - 2 * Eth + E0) / (L * theta * theta);
         //        cout << "fs = " << (Eth2-2*Eth+E0)/(0.01*0.01) << endl;
@@ -320,29 +354,37 @@ vector<double> nu;
  */
 int main(int argc, char** argv) {
 
-    //    vector<double> f(2*L*dim,1/sqrt(2.*dim));
-    //    vector<double> g(2*L*dim,0);
-    //    	parameters parms;
-    //    	parms.J = vector<double>(L,0.1);
-    //    	parms.U = vector<double>(L,1);
-    //    	parms.mu = 0.5;
-    //        parms.theta = 0;
-    //    double E1 = Ectfunc(2*L*dim,f.data(),g.data(),&parms);
-    //    int id = 0;
-    //    f[id] += 1e-6;
-    //    double E2 = Ectfunc(2*L*dim,f.data(),g.data(),&parms);
-    //    cout << g[id] << endl;
-    //    cout << (E2-E1) << endl;
-    //    
-    //    return 0;
+    //    mt19937 rng2;
+    //    uniform_real_distribution<> uni2(-1, 1);
+    //
+    //    rng2.seed(time(NULL));
+    //    nu = vector<double>(L, 0);
+    //    for(int i = 0; i < L; i++) {
+    //        nu[i] = 0.5*uni2(rng2);
+    //    }
+    //
+    //    vector<double> f(2*L*dim,0);
+    //    for(int i = 0; i <2*L*dim; i++) {
+    //        f[i] = uni2(rng2);
+    //    }
+    //        vector<double> g(2*L*dim,0);
+    //        	parameters parms;
+    //        	parms.J = vector<double>(L,0.1);
+    //        	parms.U = vector<double>(L,1);
+    //        	parms.mu = 0.5;
+    //            parms.theta = 0.1;
+    //        double E1 = Ecfunc(2*L*dim,f.data(),g.data(),&parms);
+    //        int id = 8;
+    //        f[id] += 1e-6;
+    //            parms.theta = 0.1;
+    //        double E2 = Ecfunc(2*L*dim,f.data(),g.data(),&parms);
+    //        cout << g[id] << endl;
+    //        cout << (E2-E1)/1e-6 << endl;
+    //        
+    //        return 0;
 
     mt19937 rng;
     uniform_real_distribution<> uni(-1, 1);
-    
-    nu = vector<double>(L, 0);
-    for(int i = 0; i < L; i++) {
-//        nu[i] = 1*uni(rng);
-    }
 
     int seed = lexical_cast<int>(argv[1]);
     int nseed = lexical_cast<int>(argv[2]);
@@ -381,7 +423,7 @@ int main(int argc, char** argv) {
     int numthreads = lexical_cast<int>(argv[11]);
 
     int resi = lexical_cast<int>(argv[12]);
-    
+
     bool canonical = lexical_cast<bool>(argv[13]);
 
 #ifdef AMAZON
@@ -425,6 +467,12 @@ int main(int argc, char** argv) {
             }
         }
 
+    rng.seed(seed);
+    nu = vector<double>(L, 0);
+    for (int i = 0; i < L; i++) {
+        nu[i] = 0.25 * uni(rng);
+    }
+
         int Lres = L;
 
         boost::filesystem::ofstream os(resfile);
@@ -444,6 +492,9 @@ int main(int argc, char** argv) {
         multi_array<double, 2 > fsres(extents[nx][nmu]);
         //        multi_array<double, 2> dur(extents[nx][nmu]);
         //        multi_array<int, 2> iterres(extents[nx][nmu]);
+        multi_array<double, 2 > fminres(extents[nx][nmu]);
+        multi_array<vector<double>, 2> fn0res(extents[nx][nmu]);
+        multi_array<vector<double>, 2> fmaxres(extents[nx][nmu]);
         multi_array<vector<double>, 2> f0res(extents[nx][nmu]);
         multi_array<vector<double>, 2> fthres(extents[nx][nmu]);
         multi_array<vector<double>, 2> fth2res(extents[nx][nmu]);
@@ -451,8 +502,8 @@ int main(int argc, char** argv) {
         multi_array<double, 2> Ethres(extents[nx][nmu]);
         multi_array<double, 2> Eth2res(extents[nx][nmu]);
 
-        fresults fres = {f0res, fthres, fth2res};
-        
+        fresults fres = {fminres, fn0res, fmaxres, f0res, fthres, fth2res};
+
         progress_display progress(nx * nmu);
 
         //        cout << "Queueing" << endl;
@@ -468,7 +519,7 @@ int main(int argc, char** argv) {
                 points.push(point);
             }
         }
-        
+
         phase_parameters parms;
         parms.theta = theta;
         parms.canonical = canonical;
@@ -490,12 +541,15 @@ int main(int argc, char** argv) {
         printMath(os, "fsres", resi, fsres);
         //                printMath(os, "dur", resi, dur);
         //        printMath(os, "iters", resi, iterres);
+        printMath(os, "fn0", resi, fn0res);
+        printMath(os, "fmin", resi, fminres);
+        printMath(os, "fmax", resi, fmaxres);
         printMath(os, "f0res", resi, f0res);
-//        printMath(os, "fthres", resi, fthres);
-//        printMath(os, "fth2res", resi, fth2res);
+                printMath(os, "fthres", resi, fthres);
+        //        printMath(os, "fth2res", resi, fth2res);
         printMath(os, "E0res", resi, E0res);
-        printMath(os, "Ethres", resi, Ethres);
-        printMath(os, "Eth2res", resi, Eth2res);
+//        printMath(os, "Ethres", resi, Ethres);
+//        printMath(os, "Eth2res", resi, Eth2res);
 
         ptime end = microsec_clock::local_time();
         time_period period(begin, end);

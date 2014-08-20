@@ -34,7 +34,7 @@ double Encfunc(unsigned ndim, const double *x, double *grad, void *data) {
 
         for (int n = 0; n <= nmax; n++) {
 
-            E0 += (0.5 * U[i] * n * (n - 1) - mu * n) * ~f[i][n] * f[i][n];
+            E0 += (0.5 * U[i] * n * (n - 1) - mu * n + nu[i] * n) * ~f[i][n] * f[i][n];
 
             if (n < nmax) {
                 for (int m = 1; m <= nmax; m++) {
@@ -67,7 +67,7 @@ double Encfunc(unsigned ndim, const double *x, double *grad, void *data) {
                 doublecomplex E1j1df = 0;
                 doublecomplex E1j2df = 0;
 
-                E0df += (0.5 * U[i] * n * (n - 1) - mu * n) * f[i][n];
+                E0df += (0.5 * U[i] * n * (n - 1) - mu * n + nu[i] * n) * f[i][n];
 
                 if (n < nmax) {
                     for (int m = 0; m < nmax; m++) {
@@ -157,7 +157,7 @@ double Ecfunc(unsigned ndim, const double *x, double *grad, void *data) {
         doublecomplex E5j2k2 = 0;
 
         for (int n = 0; n <= nmax; n++) {
-            E0 += (0.5 * U[i] * n * (n - 1) - mu * n) * ~f[i][n] * f[i][n];
+            E0 += (0.5 * U[i] * n * (n - 1) - mu * n + nu[i] * n) * ~f[i][n] * f[i][n];
 
             if (n < nmax) {
                 E1j1 += -J[j1] * costh * g(n, n + 1) * ~f[i][n + 1] * ~f[j1][n]
@@ -296,7 +296,7 @@ double Ecfunc(unsigned ndim, const double *x, double *grad, void *data) {
                 doublecomplex E5j1k1df = 0;
                 doublecomplex E5j2k2df = 0;
 
-                E0df += (0.5 * U[i] * n * (n - 1) - mu * n) * f[i][n];
+                E0df += (0.5 * U[i] * n * (n - 1) - mu * n + nu[i] * n) * f[i][n];
 
                 if (n < nmax) {
                     E1j1df += -J[j1] * costh * g(n, n + 1) * ~f[j1][n + 1] * f[j1][n]
