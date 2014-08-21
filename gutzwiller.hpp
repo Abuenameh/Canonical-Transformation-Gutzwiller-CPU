@@ -16,8 +16,8 @@ using namespace std;
 
 typedef complex<double> doublecomplex;
 
-#define L 20
-#define nmax 7
+#define L 50
+#define nmax 5
 #define dim (nmax+1)
 
 template<class T>
