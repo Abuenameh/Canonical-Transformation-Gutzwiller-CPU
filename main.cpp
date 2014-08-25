@@ -246,7 +246,7 @@ void phasepoints(Parameter& xi, phase_parameters pparms, queue<Point>& points, /
         for (int i = 0; i < L; i++) {
             for (int n = 0; n <= nmax; n++) {
                 f[i][n] = 1 / sqrt(dim);
-                f[i][n] = uni(rng);
+//                f[i][n] = uni(rng);
 //                f[i][n] = n == 1 ? 1 : 0;
 //                f[i][n] = (n == 1 || n == 2) ? 1/sqrt(2) : 0;
             }
@@ -324,7 +324,7 @@ void phasepoints(Parameter& xi, phase_parameters pparms, queue<Point>& points, /
 
         for (int i = 0; i < L; i++) {
             for (int n = 0; n <= nmax; n++) {
-//                f[i][n] = 1 / sqrt(dim);
+                f[i][n] = 1 / sqrt(dim);
 //                //                f[i][n] = doublecomplex(1/sqrt(dim),1/sqrt(dim));
 //                f[i][n] = uni(rng);
 //                f[i][n] = n == 1 ? 1 : 0;
@@ -361,7 +361,7 @@ void phasepoints(Parameter& xi, phase_parameters pparms, queue<Point>& points, /
 
         for (int i = 0; i < L; i++) {
             for (int n = 0; n <= nmax; n++) {
-//                f[i][n] = 1 / sqrt(dim);
+                f[i][n] = 1 / sqrt(dim);
 //                f[i][n] = uni(rng);
 //                f[i][n] = n == 1 ? 1 : 0;
 //                f[i][n] = (n == 1 || n == 2) ? 1/sqrt(2) : 0;
