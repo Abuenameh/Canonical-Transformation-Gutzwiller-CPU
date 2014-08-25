@@ -63,8 +63,6 @@ inline double eps(vector<double> U, int i, int j, int n, int m) {
 }
 
 double Encfunc(unsigned ndim, const double *x, double *grad, void *data);
-double Encnnfunc(unsigned ndim, const double *x, double *grad, void *data);
-double Encfunc2(unsigned ndim, const double *x, double *grad, void *data);
 double Ecfunc(unsigned ndim, const double *x, double *grad, void *data);
 
 

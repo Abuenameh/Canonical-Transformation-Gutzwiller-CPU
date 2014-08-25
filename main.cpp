@@ -294,10 +294,10 @@ void phasepoints(Parameter& xi, phase_parameters pparms, queue<Point>& points, /
             res = -10;
         }
         
-        vector<double> grad(ndim);
-        vector<double> grad0(ndim);
-        Encfunc(ndim, x.data(), grad.data(), &parms);
-        transform(grad.begin(), grad.end(), grad0.begin(), std::ptr_fun<double,double>(std::abs));
+//        vector<double> grad(ndim);
+//        vector<double> grad0(ndim);
+//        Encfunc(ndim, x.data(), grad.data(), &parms);
+//        transform(grad.begin(), grad.end(), grad0.begin(), std::ptr_fun<double,double>(std::abs));
 //        cout << "0: " << *min_element(grad0.begin(), grad0.end()) << " - " << *max_element(grad0.begin(), grad0.end()) << endl;
 //        printMath(cout, "grad0", point.j, grad);
         
@@ -343,8 +343,8 @@ void phasepoints(Parameter& xi, phase_parameters pparms, queue<Point>& points, /
             res = -10;
         }
 
-        Encfunc(ndim, x.data(), grad.data(), &parms);
-        transform(grad.begin(), grad.end(), grad0.begin(), std::ptr_fun<double,double>(std::abs));
+//        Encfunc(ndim, x.data(), grad.data(), &parms);
+//        transform(grad.begin(), grad.end(), grad0.begin(), std::ptr_fun<double,double>(std::abs));
 //        cout << "th: " << *min_element(grad0.begin(), grad0.end()) << " - " << *max_element(grad0.begin(), grad0.end()) << endl;
 
         norm(x, norms);
@@ -379,8 +379,8 @@ void phasepoints(Parameter& xi, phase_parameters pparms, queue<Point>& points, /
             res = -10;
         }
 
-        Encfunc(ndim, x.data(), grad.data(), &parms);
-        transform(grad.begin(), grad.end(), grad0.begin(), std::ptr_fun<double,double>(std::abs));
+//        Encfunc(ndim, x.data(), grad.data(), &parms);
+//        transform(grad.begin(), grad.end(), grad0.begin(), std::ptr_fun<double,double>(std::abs));
 //        cout << "th2: " << *min_element(grad0.begin(), grad0.end()) << " - " << *max_element(grad0.begin(), grad0.end()) << endl;
 
         norm(x, norms);
@@ -403,7 +403,7 @@ void phasepoints(Parameter& xi, phase_parameters pparms, queue<Point>& points, /
 
         {
             boost::mutex::scoped_lock lock(progress_mutex);
-//            ++progress;
+            ++progress;
         }
     }
 
