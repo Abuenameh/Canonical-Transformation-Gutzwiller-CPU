@@ -420,41 +420,41 @@ int main(int argc, char** argv) {
 //    cout << ::math(exp(doublecomplex(0,1)*0.1).real()) << endl;
 //    cout << ::math(exp(-doublecomplex(0,1)*0.1).real()) << endl;
     
-        mt19937 rng2;
-        uniform_real_distribution<> uni2(-1, 1);
-    
-        rng2.seed(time(NULL));
-        nu = vector<double>(L, 0);
-        for(int i = 0; i < L; i++) {
-            nu[i] = 0;//0.5*uni2(rng2);
-        }
-    
-        vector<double> f(2*L*dim,0);
-        for(int i = 0; i <2*L*dim; i++) {
-            f[i] = uni2(rng2);
-        }
-            vector<double> g(2*L*dim,0);
-            	parameters parms;
-            	parms.J = vector<double>(L,0.1);
-            	parms.U = vector<double>(L,1);
-            	parms.mu = 0.5;
-                parms.theta = 0.1;
-            double E1 = Encfunc(2*L*dim,f.data(),g.data(),&parms);
-//            cout << ::math(E1) << endl;
-            int id = 2;
-            for(int id = 2; id < 2*L*dim; id++) {
-            double df = 1e-8;
-            f[id] += df;
-                parms.theta = 0.1;
-            double E2 = Encfunc(2*L*dim,f.data(),g.data(),&parms);
-//            cout << ::math(E2) << endl;
-            cout << ::math(g[id]) << "\t";//endl;
-            cout << ::math((E2-E1)/df) << "\t";//endl;
-            cout << ::math((E2-E1)/df-g[id]) << endl;
-            f[id] -= df;
-            }
-            
-            return 0;
+//        mt19937 rng2;
+//        uniform_real_distribution<> uni2(-1, 1);
+//    
+//        rng2.seed(time(NULL));
+//        nu = vector<double>(L, 0);
+//        for(int i = 0; i < L; i++) {
+//            nu[i] = 0;//0.5*uni2(rng2);
+//        }
+//    
+//        vector<double> f(2*L*dim,0);
+//        for(int i = 0; i <2*L*dim; i++) {
+//            f[i] = uni2(rng2);
+//        }
+//            vector<double> g(2*L*dim,0);
+//            	parameters parms;
+//            	parms.J = vector<double>(L,0.1);
+//            	parms.U = vector<double>(L,1);
+//            	parms.mu = 0.5;
+//                parms.theta = 0.1;
+//            double E1 = Encfunc(2*L*dim,f.data(),g.data(),&parms);
+////            cout << ::math(E1) << endl;
+//            int id = 2;
+//            for(int id = 2; id < 2*L*dim; id++) {
+//            double df = 1e-7;
+//            f[id] += df;
+//                parms.theta = 0.1;
+//            double E2 = Encfunc(2*L*dim,f.data(),g.data(),&parms);
+////            cout << ::math(E2) << endl;
+//            cout << ::math(g[id]) << "\t";//endl;
+//            cout << ::math((E2-E1)/df) << "\t";//endl;
+//            cout << ::math((E2-E1)/df-g[id]) << endl;
+//            f[id] -= df;
+//            }
+//            
+//            return 0;
 
     mt19937 rng;
     uniform_real_distribution<> uni(-1, 1);
