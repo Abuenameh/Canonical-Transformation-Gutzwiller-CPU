@@ -547,10 +547,12 @@ int main(int argc, char** argv) {
 //        }
 
         int Lres = L;
+        int nmaxres = nmax;
 
         boost::filesystem::ofstream os(resfile);
         printMath(os, "canonical", resi, canonical);
         printMath(os, "Lres", resi, Lres);
+        printMath(os, "nmaxres", resi, nmaxres);
         printMath(os, "seed", resi, seed);
         printMath(os, "theta", resi, theta);
         printMath(os, "Delta", resi, D);
