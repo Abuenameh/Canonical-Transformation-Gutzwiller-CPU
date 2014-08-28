@@ -276,7 +276,7 @@ void phasepoints(Parameter& xi, phase_parameters pparms, queue<Point>& points, /
         opt.set_upper_bounds(1);
         opt.set_ftol_rel(1e-6);
         opt.set_xtol_rel(1e-6);
-        opt.set_maxtime(10);
+        opt.set_maxtime(30);
         //                opt.set_xtol_rel(1e-14);
         //                opt.set_xtol_abs(1e-14);
         //                opt.set_ftol_rel(1e-14);
@@ -382,7 +382,7 @@ void phasepoints(Parameter& xi, phase_parameters pparms, queue<Point>& points, /
             for (int n = 0; n <= nmax; n++) {
                 //                f[i][n] = 1 / sqrt(dim);
                 //                //                f[i][n] = doublecomplex(1/sqrt(dim),1/sqrt(dim));
-                //                f[i][n] = uni(rng);
+                                f[i][n] = uni(rng);
                 //                f[i][n] = n == 1 ? 1 : 1e-2;//0;
                 //                f[i][n] = (n == 1 || n == 2) ? 1/sqrt(2) : 0;
             }
@@ -401,7 +401,7 @@ void phasepoints(Parameter& xi, phase_parameters pparms, queue<Point>& points, /
         try {
             res = lopt.optimize(x, Eth);
         } catch (std::exception& e) {
-            printf("nlopt failed!: Eth: %d, %d\n", point.i, point.j);
+            printf("nlopt failed!: Eth refine: %d, %d\n", point.i, point.j);
             cout << e.what() << endl;
             Eth = numeric_limits<double>::quiet_NaN();
             res = -10;
@@ -426,7 +426,7 @@ void phasepoints(Parameter& xi, phase_parameters pparms, queue<Point>& points, /
         for (int i = 0; i < L; i++) {
             for (int n = 0; n <= nmax; n++) {
                 //                f[i][n] = 1 / sqrt(dim);
-                //                f[i][n] = uni(rng);
+                                f[i][n] = uni(rng);
                 //                f[i][n] = n == 1 ? 1 : 1e-2;//0;
                 //                f[i][n] = (n == 1 || n == 2) ? 1/sqrt(2) : 0;
             }
@@ -447,7 +447,7 @@ void phasepoints(Parameter& xi, phase_parameters pparms, queue<Point>& points, /
             res = lopt.optimize(x, Eth2);
             //            printf("Twisted energy 2: %0.10g\n", Eth2);
         } catch (std::exception& e) {
-            printf("nlopt failed!: Eth2: %d, %d\n", point.i, point.j);
+            printf("nlopt failed!: Eth2 refine: %d, %d\n", point.i, point.j);
             cout << e.what() << endl;
             Eth2 = numeric_limits<double>::quiet_NaN();
             res = -10;
