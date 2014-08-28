@@ -1,5 +1,7 @@
 #include "gutzwiller.hpp"
 
+#include <iomanip>
+
 double Encfunc(unsigned ndim, const double *x, double *grad, void *data) {
     parameters* parms = static_cast<parameters*> (data);
     vector<double> U = parms->U;
@@ -132,7 +134,9 @@ double Ecfunc(unsigned ndim, const double *x, double *grad, void *data) {
         f[i] = reinterpret_cast<const doublecomplex*> (&x[2 * i * dim]);
         for (int n = 0; n <= nmax; n++) {
             norm2[i] += norm(f[i][n]);
+//            cout << f[i][n] << " ";
         }
+//        cout << endl;
     }
 
     vector<doublecomplex> E0s(L, 0), E1j1s(L, 0), E1j2s(L, 0),
@@ -624,11 +628,17 @@ double Ecfunc(unsigned ndim, const double *x, double *grad, void *data) {
                 int k = i * dim + n;
                 grad[2 * k] = 2 * Edf.real();
                 grad[2 * k + 1] = 2 * Edf.imag();
+                
             }
         }
     }
+//    static double Emin = 1e10;
+//    Emin = min(Emin, Ec.real());
+//    cout << setprecision(10) << Emin << endl;
+    
+//    cout << setprecision(10) << Ec.real() << endl;
+        return Ec.real();
 
-    return Ec.real();
 }
 
 void norm2s(unsigned m, double *result, unsigned ndim, const double* x,
