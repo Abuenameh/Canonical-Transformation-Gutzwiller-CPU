@@ -159,8 +159,10 @@ struct results {
     multi_array<double, 2 >& resth2;
 };
 
-#define NPHASES 5
-vector<vector<doublecomplex> > randomphases;
+//#define NPHASES 5
+//vector<vector<doublecomplex> > randomphases;
+//
+//#define NSTARTPOINTS 5
 
 void phasepoints(Parameter& xi, phase_parameters pparms, queue<Point>& points, /*multi_array<vector<double>, 2 >& f0*/fresults& fres, /*multi_array<double, 2 >& E0res, multi_array<double, 2 >& Ethres, multi_array<double, 2 >& Eth2res, multi_array<double, 2 >& fs,*/results& results, progress_display& progress) {
 
@@ -266,13 +268,15 @@ void phasepoints(Parameter& xi, phase_parameters pparms, queue<Point>& points, /
         ////    return 0;
         //
         //        cout << "Setting up optimizer" << endl;
-//        nlopt::opt opt(nlopt::GD_MLSL_LDS, ndim);
-//        nlopt::opt opt(nlopt::GD_STOGO, ndim);
-                nlopt::opt opt(nlopt::LD_LBFGS, ndim);
+        nlopt_srand_time();
+        nlopt::opt opt(nlopt::GD_MLSL_LDS, ndim);
+//        nlopt::opt opt(nlopt::GD_STOGO_RAND, ndim);
+//                nlopt::opt opt(nlopt::LD_LBFGS, ndim);
         opt.set_lower_bounds(-1);
         opt.set_upper_bounds(1);
-//        opt.set_ftol_rel(1e-5);
-//        opt.set_xtol_rel(1e-5);
+        opt.set_ftol_rel(1e-6);
+        opt.set_xtol_rel(1e-6);
+        opt.set_maxtime(10);
         //                opt.set_xtol_rel(1e-14);
         //                opt.set_xtol_abs(1e-14);
         //                opt.set_ftol_rel(1e-14);
@@ -287,6 +291,7 @@ void phasepoints(Parameter& xi, phase_parameters pparms, queue<Point>& points, /
 //        opt.set_local_optimizer(lopt);
 
         opt.set_min_objective(Efunc, &parms);
+        lopt.set_min_objective(Efunc, &parms);
         //            cout << "Optimizer set up. Doing optimization" << endl;
 
         int res = 0;
@@ -297,7 +302,6 @@ void phasepoints(Parameter& xi, phase_parameters pparms, queue<Point>& points, /
         double E0 = 0;
         try {
             res = opt.optimize(x, E0);
-            //            printf("Ground state energy: %0.10g\n", E0);
         } catch (std::exception& e) {
             printf("nlopt failed!: E0: %d, %d\n", point.i, point.j);
             cout << e.what() << endl;
@@ -305,32 +309,46 @@ void phasepoints(Parameter& xi, phase_parameters pparms, queue<Point>& points, /
             res = -10;
         }
         
-//        cout << ::math(x) << endl;
-        for(int i = 0; i < NPHASES; i++) {
-            double E0ph = 0;
-            for(int j = 0; j < L; j++) {
-                for(int n = 0; n <= nmax; n++) {
-                f[j][n] *= randomphases[i][j*dim+n];
-                }
-            }
-            cout << ::math(x) << endl;
-            try {
-                res = opt.optimize(x, E0ph);
-                if(E0ph < E0) {
-//                    cout << "Less " << i << endl;
-                    E0 = E0ph;
-//                    cout << "E0ph = " << E0 << endl;
-                    copy(x.begin(), x.end(), xmin.begin());
-                }
-                //            printf("Ground state energy: %0.10g\n", E0);
-            } catch (std::exception& e) {
-                printf("nlopt failed!: E0ph: %d, %d, %d\n", i, point.i, point.j);
-                cout << e.what() << endl;
-                E0 = numeric_limits<double>::quiet_NaN();
-                res = -10;
-            }
+//        double E0 = numeric_limits<double>::infinity();
+//        
+////        cout << ::math(x) << endl;
+//        for(int i = 0; i < NSTARTPOINTS; i++) {
+//            double E0i = 0;
+//            for(int j = 0; j < L; j++) {
+//                for(int n = 0; n <= nmax; n++) {
+////                f[j][n] *= randomphases[i][j*dim+n];
+//                f[j][n] = uni(rng);
+//                }
+//            }
+//            try {
+//                res = opt.optimize(x, E0i);
+//                if(E0i < E0) {
+////                    cout << "Less " << i << endl;
+//                    E0 = E0i;
+////                    cout << "E0ph = " << E0 << endl;
+//                    copy(x.begin(), x.end(), xmin.begin());
+//                }
+//                //            printf("Ground state energy: %0.10g\n", E0);
+//            } catch (std::exception& e) {
+//                printf("nlopt failed!: E0i: %d, %d, %d\n", i, point.i, point.j);
+//                cout << e.what() << endl;
+//                E0i = numeric_limits<double>::quiet_NaN();
+//                res = -10;
+//            }
+//        }
+//        cout << "E0 = " << E0 << endl;
+        
+        try {
+            res = lopt.optimize(x, E0);
+        } catch (std::exception& e) {
+            printf("nlopt failed!: E0 refine: %d, %d\n", point.i, point.j);
+            cout << e.what() << endl;
+            E0 = numeric_limits<double>::quiet_NaN();
+            res = -10;
         }
-        cout << "E0 = " << E0 << endl;
+//        cout << "E0 = " << E0 << endl;
+        
+//        exit(0);
 
         //        vector<double> grad(ndim);
         //        vector<double> grad0(ndim);
@@ -373,7 +391,15 @@ void phasepoints(Parameter& xi, phase_parameters pparms, queue<Point>& points, /
         parms.theta = theta;
         try {
             res = opt.optimize(x, Eth);
-            //            printf("Twisted energy: %0.10g\n", Eth);
+        } catch (std::exception& e) {
+            printf("nlopt failed!: Eth: %d, %d\n", point.i, point.j);
+            cout << e.what() << endl;
+            Eth = numeric_limits<double>::quiet_NaN();
+            res = -10;
+        }
+
+        try {
+            res = lopt.optimize(x, Eth);
         } catch (std::exception& e) {
             printf("nlopt failed!: Eth: %d, %d\n", point.i, point.j);
             cout << e.what() << endl;
@@ -409,6 +435,16 @@ void phasepoints(Parameter& xi, phase_parameters pparms, queue<Point>& points, /
         parms.theta = 2 * theta;
         try {
             res = opt.optimize(x, Eth2);
+            //            printf("Twisted energy 2: %0.10g\n", Eth2);
+        } catch (std::exception& e) {
+            printf("nlopt failed!: Eth2: %d, %d\n", point.i, point.j);
+            cout << e.what() << endl;
+            Eth2 = numeric_limits<double>::quiet_NaN();
+            res = -10;
+        }
+
+        try {
+            res = lopt.optimize(x, Eth2);
             //            printf("Twisted energy 2: %0.10g\n", Eth2);
         } catch (std::exception& e) {
             printf("nlopt failed!: Eth2: %d, %d\n", point.i, point.j);
@@ -641,13 +677,13 @@ int main(int argc, char** argv) {
         parms.theta = theta;
         parms.canonical = canonical;
         
-        for(int i = 0; i < NPHASES; i++) {
-            vector<doublecomplex> randphase(L*dim);
-            for(int j = 0; j < L*dim; j++) {
-                randphase[j] = exp(doublecomplex(0,1)*uni(rng)*M_PI);
-            }
-            randomphases.push_back(randphase);
-        }
+//        for(int i = 0; i < NPHASES; i++) {
+//            vector<doublecomplex> randphase(L*dim);
+//            for(int j = 0; j < L*dim; j++) {
+//                randphase[j] = exp(doublecomplex(0,1)*uni(rng)*M_PI);
+//            }
+//            randomphases.push_back(randphase);
+//        }
 
         //        cout << "Dispatching" << endl;
         thread_group threads;
